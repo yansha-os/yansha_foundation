@@ -1,9 +1,11 @@
-{
-  "name": "yansha-core-workspace",
+﻿{
+  "name": "yansha-foundation",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.17.0",
   "scripts": {
-    "typecheck": "pnpm -r --parallel exec tsc --noEmit"
+    "typecheck": "pnpm -r --parallel exec tsc --noEmit",
+    "build:release": "node scripts/release.js",
+    "serve:registry": "node scripts/serve-registry.js"
   }
 }
