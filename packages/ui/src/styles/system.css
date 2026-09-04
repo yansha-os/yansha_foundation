@@ -1,0 +1,539 @@
+@import "tailwindcss";
+
+/* `static` so every token is emitted to :root even when no utility references
+   it. Without it Tailwind tree-shakes unused theme vars, and a downstream
+   author writing raw `var(--cut-md)` silently gets nothing. */
+@theme static {
+  --color-abyss: #04060e;
+  --color-void: #070b18;
+  --color-panel: #0a1024;
+  --color-panel-2: #0d1430;
+  --color-line: #1c2a52;
+  --color-sysblue: #3fd8ff;
+  --color-sysblue-dim: #1e9fd0;
+  --color-syspurple: #a855f7;
+  --color-syspurple-dim: #7c3aed;
+  --color-sysgold: #fbbf24;
+  --color-sysred: #f43f5e;
+  --color-sysgreen: #34d399;
+  --color-ghost: #8ea7d8;
+
+  --font-display: var(--font-orbitron);
+  --font-body: var(--font-rajdhani);
+
+  /* ── Semantic surface tokens (additive; see docs/design/design-system.md) ─
+     These alias the existing raw palette above. Migrations swap raw names for
+     semantic ones cluster by cluster.
+
+     Everything between the BEGIN/END markers below is the semantic token set of
+     design-system.md §2. The marked list in that section is checked against
+     these declarations by lib/__tests__/design-tokens.test.ts, in both
+     directions, so the doc cannot claim a token that does not exist and cannot
+     omit one that does. Tokens above the marker are the frozen raw palette and
+     the font families, which belong to §1, not §2. */
+  /* BEGIN:design-tokens */
+  --color-surface-base: #04060e;
+  --color-surface-sunken: #070b18;
+  --color-surface-raised: #0a1024;
+  --color-surface-overlay: #0d1430;
+  --color-border-subtle: #1c2a52;
+
+  --color-accent: #3fd8ff;
+  --color-accent-dim: #1e9fd0;
+  --color-accent-alt: #a855f7;
+  --color-accent-alt-dim: #7c3aed;
+
+  /* The closed accent-hue set. A module may declare exactly one of these and
+     nothing else; see docs/design/design-system.md §4. */
+  --color-accent-blue: #3fd8ff;
+  --color-accent-blue-dim: #1e9fd0;
+  --color-accent-purple: #a855f7;
+  --color-accent-purple-dim: #7c3aed;
+  --color-accent-gold: #fbbf24;
+  --color-accent-gold-dim: #d99e0b;
+  --color-accent-red: #f43f5e;
+  --color-accent-red-dim: #be123c;
+  --color-accent-green: #34d399;
+  --color-accent-green-dim: #0f9b73;
+
+  --color-status-success: #34d399;
+  --color-status-warning: #fbbf24;
+  --color-status-danger: #f43f5e;
+  --color-status-info: #3fd8ff;
+
+  --color-text-primary: #dbe6ff;
+  --color-text-muted: #8ea7d8;
+  /* Raised from the legacy #4a5d8a placeholder colour, which fails WCAG AA
+     against --color-surface-sunken. Consumers migrate in the a11y pass. */
+  --color-text-faint: #7288b5;
+  --color-text-inverse: #03040a;
+  /* The dimmest text the system permits. #7288b5 is 5.5:1 on --color-surface-sunken
+     and 5.3:1 on --color-surface-raised, so it clears AA at full opacity. Do not
+     apply an opacity modifier to it — /50 and /60 drop it below 4.5:1. */
+  --color-text-placeholder: #7288b5;
+
+  /* Motion — every new transition/animation must pick from this scale */
+  --duration-instant: 120ms;
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 450ms;
+  --duration-ambient: 2400ms;
+  /* Progress/meter fills (app/training/page.tsx uses duration-500) */
+  --duration-progress: 500ms;
+  /* Shimmer + flicker cycles */
+  --duration-shimmer: 3000ms;
+  --ease-system: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --ease-burst: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: ease-out;
+
+  /* Chrome geometry */
+  --cut-sm: 8px;
+  --cut-md: 14px;
+  --cut-lg: 20px;
+
+  /* Z-layers */
+  --z-base: 0;
+  --z-sticky: 30;
+  --z-nav: 40;
+  /* Toasts sit above the nav but BELOW the modal layer, deliberately. A toast
+     stacked over an open dialog is unreachable: the dialog traps Tab, so the
+     toast can be seen but never focused, while it can cover the dialog's
+     primary action. Modal-on-top keeps the focused surface the visible one. */
+  --z-toast: 45;
+  --z-modal: 50;
+}
+
+/* Glow recipes referenced by the design system. Additive: no selector below
+   applies them, so current rendering is untouched. */
+:root {
+  --glow-accent-sm: 0 0 12px rgba(63, 216, 255, 0.12);
+  --glow-accent-md: 0 0 20px rgba(63, 216, 255, 0.35);
+  --glow-accent-lg: 0 0 40px rgba(63, 216, 255, 0.05);
+  --glow-accent-inset: inset 0 0 24px rgba(63, 216, 255, 0.04);
+  --glow-alt-sm: 0 0 12px rgba(168, 85, 247, 0.14);
+  --glow-danger-sm: 0 0 14px rgba(244, 63, 94, 0.22);
+  --glow-gold-sm: 0 0 12px rgba(251, 191, 36, 0.14);
+  --glow-green-sm: 0 0 12px rgba(52, 211, 153, 0.14);
+  --panel-gradient: linear-gradient(160deg, rgba(13, 20, 48, 0.85), rgba(7, 11, 24, 0.92));
+  --focus-ring: 0 0 0 2px #04060e, 0 0 0 4px #3fd8ff;
+
+  /* ── Panel chrome recipes ──────────────────────────────────────────
+     Exact transcription of .system-panel below. A module may swap the
+     border/glow trio for an accent hue; nothing else about panel chrome
+     is customisable. */
+  --panel-backdrop-blur: blur(6px);
+  --panel-cut: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  --panel-scanline: repeating-linear-gradient(
+    0deg,
+    rgba(63, 216, 255, 0.025) 0px,
+    rgba(63, 216, 255, 0.025) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  --panel-shadow-blue:
+    0 0 12px rgba(63, 216, 255, 0.12),
+    0 0 40px rgba(63, 216, 255, 0.05),
+    inset 0 0 24px rgba(63, 216, 255, 0.04);
+  --panel-shadow-purple:
+    0 0 12px rgba(168, 85, 247, 0.14),
+    0 0 40px rgba(168, 85, 247, 0.06),
+    inset 0 0 24px rgba(168, 85, 247, 0.05);
+  --panel-shadow-red:
+    0 0 14px rgba(244, 63, 94, 0.22),
+    0 0 48px rgba(244, 63, 94, 0.08),
+    inset 0 0 24px rgba(244, 63, 94, 0.07);
+  --panel-shadow-gold:
+    0 0 12px rgba(251, 191, 36, 0.14),
+    0 0 40px rgba(251, 191, 36, 0.06),
+    inset 0 0 24px rgba(251, 191, 36, 0.05);
+  --panel-shadow-green:
+    0 0 12px rgba(52, 211, 153, 0.14),
+    0 0 40px rgba(52, 211, 153, 0.06),
+    inset 0 0 24px rgba(52, 211, 153, 0.05);
+  --panel-border-blue: rgba(63, 216, 255, 0.28);
+  --panel-border-purple: rgba(168, 85, 247, 0.35);
+  --panel-border-red: rgba(244, 63, 94, 0.5);
+  --panel-border-gold: rgba(251, 191, 36, 0.35);
+  --panel-border-green: rgba(52, 211, 153, 0.35);
+
+  /* ── Text glow recipes (text-shadow, never filter) ─────────────── */
+  --text-glow-blue: 0 0 10px rgba(63, 216, 255, 0.8), 0 0 30px rgba(63, 216, 255, 0.4);
+  --text-glow-purple: 0 0 10px rgba(168, 85, 247, 0.8), 0 0 30px rgba(168, 85, 247, 0.4);
+  --text-glow-gold: 0 0 10px rgba(251, 191, 36, 0.8), 0 0 30px rgba(251, 191, 36, 0.4);
+  --text-glow-red: 0 0 10px rgba(244, 63, 94, 0.8), 0 0 30px rgba(244, 63, 94, 0.4);
+  --text-glow-green: 0 0 10px rgba(52, 211, 153, 0.8), 0 0 30px rgba(52, 211, 153, 0.4);
+
+  /* ── Focus ring ────────────────────────────────────────────────────
+     2px abyss gap + 2px cyan ring. #3fd8ff is 12.0:1 against
+     --color-surface-base and 11.2:1 against --color-surface-raised, well
+     past the 3:1 required of a non-text indicator. Clip-path clips
+     outlines, so chamfered elements draw the ring inside their own box
+     using --focus-ring-offset-inset. */
+  --focus-ring-color: #3fd8ff;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-offset-inset: -3px;
+  /* END:design-tokens */
+}
+
+html {
+  background: var(--color-abyss);
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(63, 216, 255, 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 110%, rgba(168, 85, 247, 0.07), transparent 60%),
+    var(--color-abyss);
+  color: #dbe6ff;
+  font-family: var(--font-rajdhani), sans-serif;
+  min-height: 100vh;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-orbitron), sans-serif;
+  letter-spacing: 0.06em;
+}
+
+/* ── Holographic system panel & Solo Leveling Cut Corners ─────────── */
+/* Geometry and chrome are stated once, in the token layer above, and consumed
+   here. The literals these rules used to carry were byte-identical copies of
+   those tokens; keeping both meant a token could be edited without the thing it
+   describes changing, which is the drift the token layer exists to prevent. */
+.solo-cut {
+  clip-path: var(--panel-cut);
+}
+
+.solo-cut-sm {
+  clip-path: polygon(var(--cut-sm) 0, 100% 0, 100% calc(100% - var(--cut-sm)), calc(100% - var(--cut-sm)) 100%, 0 100%, 0 var(--cut-sm));
+}
+
+.solo-cut-lg {
+  clip-path: polygon(var(--cut-lg) 0, 100% 0, 100% calc(100% - var(--cut-lg)), calc(100% - var(--cut-lg)) 100%, 0 100%, 0 var(--cut-lg));
+}
+
+.system-panel {
+  position: relative;
+  background: var(--panel-gradient);
+  border: 1px solid var(--panel-border-blue);
+  box-shadow: var(--panel-shadow-blue);
+  clip-path: var(--panel-cut);
+  backdrop-filter: var(--panel-backdrop-blur);
+}
+
+.system-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--panel-scanline);
+}
+
+/* Recolouring the border/shadow pair is the only sanctioned panel variation. */
+.system-panel-purple {
+  border-color: var(--panel-border-purple);
+  box-shadow: var(--panel-shadow-purple);
+}
+
+.system-panel-red {
+  border-color: var(--panel-border-red);
+  box-shadow: var(--panel-shadow-red);
+}
+
+/* Corner brackets like a targeting reticle */
+.system-corners::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, rgba(63, 216, 255, 0.7) 12px, transparent 12px) top left,
+    linear-gradient(to bottom, rgba(63, 216, 255, 0.7) 12px, transparent 12px) top left,
+    linear-gradient(to left, rgba(63, 216, 255, 0.7) 12px, transparent 12px) top right,
+    linear-gradient(to bottom, rgba(63, 216, 255, 0.7) 12px, transparent 12px) top right,
+    linear-gradient(to right, rgba(63, 216, 255, 0.7) 12px, transparent 12px) bottom left,
+    linear-gradient(to top, rgba(63, 216, 255, 0.7) 12px, transparent 12px) bottom left,
+    linear-gradient(to left, rgba(63, 216, 255, 0.7) 12px, transparent 12px) bottom right,
+    linear-gradient(to top, rgba(63, 216, 255, 0.7) 12px, transparent 12px) bottom right;
+  background-repeat: no-repeat;
+  background-size: 24px 2px, 2px 24px, 24px 2px, 2px 24px, 24px 2px, 2px 24px, 24px 2px, 2px 24px;
+}
+
+.glow-blue { text-shadow: var(--text-glow-blue); }
+.glow-purple { text-shadow: var(--text-glow-purple); }
+.glow-red { text-shadow: var(--text-glow-red); }
+.glow-gold { text-shadow: var(--text-glow-gold); }
+.glow-green { text-shadow: var(--text-glow-green); }
+
+/* ── System input styling ─────────────────────────────────────────── */
+.system-input {
+  background: rgba(7, 11, 24, 0.8);
+  border: 1px solid rgba(63, 216, 255, 0.25);
+  color: #dbe6ff;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-rajdhani), sans-serif;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+.system-input:focus {
+  border-color: rgba(63, 216, 255, 0.7);
+  box-shadow: 0 0 12px rgba(63, 216, 255, 0.25);
+}
+.system-input::placeholder { color: #4a5d8a; }
+
+.system-btn {
+  position: relative;
+  font-family: var(--font-orbitron), sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.55rem 1.15rem;
+  color: #03040a;
+  background: var(--color-sysblue);
+  border: 1px solid var(--color-sysblue);
+  clip-path: polygon(var(--cut-sm) 0, 100% 0, 100% calc(100% - var(--cut-sm)), calc(100% - var(--cut-sm)) 100%, 0 100%, 0 var(--cut-sm));
+  box-shadow: var(--glow-accent-md);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.system-btn:hover {
+  transform: translateY(-1.5px);
+  background: #6fe4ff;
+  border-color: #6fe4ff;
+  box-shadow: 0 0 30px rgba(63, 216, 255, 0.65);
+  color: #000;
+}
+.system-btn:active {
+  transform: translateY(0.5px);
+}
+.system-btn:disabled { 
+  opacity: 0.35; 
+  cursor: not-allowed; 
+  box-shadow: none; 
+  transform: none;
+}
+
+.system-btn-gold {
+  color: #03040a;
+  background: var(--color-sysgold);
+  border: 1px solid var(--color-sysgold);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.35);
+}
+.system-btn-gold:hover {
+  background: #fcd34d;
+  border-color: #fcd34d;
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.65);
+  color: #000;
+}
+
+.system-btn-outline {
+  color: var(--color-sysblue);
+  background: rgba(63, 216, 255, 0.08);
+  border: 1px solid rgba(63, 216, 255, 0.4);
+  box-shadow: none;
+}
+.system-btn-outline:hover {
+  background: rgba(63, 216, 255, 0.2);
+  border-color: var(--color-sysblue);
+  box-shadow: 0 0 18px rgba(63, 216, 255, 0.4);
+  color: #fff;
+}
+
+.system-btn-purple {
+  color: #fff;
+  background: rgba(168, 85, 247, 0.3);
+  border: 1px solid rgba(168, 85, 247, 0.6);
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.25);
+}
+.system-btn-purple:hover {
+  background: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.5);
+  color: #fff;
+}
+
+.system-btn-red {
+  color: #fff;
+  background: rgba(244, 63, 94, 0.3);
+  border: 1px solid rgba(244, 63, 94, 0.6);
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.25);
+}
+.system-btn-red:hover {
+  background: rgba(244, 63, 94, 0.5);
+  box-shadow: 0 0 24px rgba(244, 63, 94, 0.5);
+  color: #fff;
+}
+
+/* ── Animations ───────────────────────────────────────────────────── */
+@keyframes system-materialize {
+  0% { opacity: 0; transform: translateY(10px) scale(0.985); filter: brightness(2); }
+  60% { filter: brightness(1.25); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+}
+.animate-materialize { animation: system-materialize 0.45s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+
+@keyframes levelup-burst {
+  0% { opacity: 0; transform: scale(0.6); filter: blur(6px) brightness(3); }
+  50% { opacity: 1; transform: scale(1.06); filter: blur(0) brightness(1.6); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0) brightness(1); }
+}
+.animate-levelup { animation: levelup-burst 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(63, 216, 255, 0.15), inset 0 0 24px rgba(63, 216, 255, 0.04); }
+  50% { box-shadow: 0 0 28px rgba(63, 216, 255, 0.4), inset 0 0 32px rgba(63, 216, 255, 0.1); }
+}
+.animate-pulse-glow { animation: pulse-glow 2.4s ease-in-out infinite; }
+
+@keyframes warn-flicker {
+  0%, 100% { opacity: 1; }
+  8% { opacity: 0.6; }
+  12% { opacity: 1; }
+  46% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+.animate-warn-flicker { animation: warn-flicker 3s linear infinite; }
+
+/* `animate-fade` / `animate-fadeIn` are used in ~90 components (sidebar labels,
+   modal overlays, panel mounts). Both resolved to animation-name: none. */
+@keyframes system-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade { animation: system-fade 0.25s ease-out both; }
+
+@keyframes system-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn { animation: system-fade-in 0.25s ease-out both; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-toast-in { animation: toast-in 0.3s ease-out both; }
+
+/* Same defect class as `animate-fade` above: these three are referenced by
+   components but had no keyframe, so they resolved to animation-name: none.
+   Every `animate-*` class in the repo must resolve to a keyframe defined here
+   or shipped by Tailwind (spin/ping/pulse/bounce). */
+@keyframes system-slide-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slideIn { animation: system-slide-in var(--duration-base) var(--ease-system) both; }
+
+@keyframes system-scale-up {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-up { animation: system-scale-up var(--duration-slow) var(--ease-system) both; }
+
+@keyframes system-spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: system-spin-slow 6s linear infinite; }
+
+@keyframes bar-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.xp-bar-fill {
+  background: linear-gradient(
+    90deg,
+    #1e9fd0,
+    #3fd8ff 40%,
+    #a855f7 70%,
+    #3fd8ff
+  );
+  background-size: 200% 100%;
+  animation: bar-shimmer 3s linear infinite;
+  box-shadow: 0 0 12px rgba(63, 216, 255, 0.6);
+}
+
+/* ── Focus ring base layer ─────────────────────────────────────────
+   `:where()` keeps specificity at zero, so any component rule still wins and
+   nothing about the resting state changes — this only paints on keyboard
+   focus, which previously rendered nothing at all on buttons.
+
+   The element set is deliberately the same one `isTabbable` in
+   lib/ui/focus-trap.ts accepts, so "can be tabbed to" and "shows a ring when
+   tabbed to" cannot drift apart. That includes `contenteditable` regions, which
+   are genuine tab stops, and excludes any negative tabindex. */
+:where(
+  a[href],
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [contenteditable]:not([contenteditable="false"]),
+  [tabindex]:not([tabindex^="-"])
+):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* clip-path clips the outline too, so chamfered controls draw it inward. Any
+   element carrying a chamfer needs this, whichever of the two ways it got one:
+   a `.solo-cut*` utility or one of the `.system-btn*` variants. */
+:where(.system-btn, .system-btn-gold, .system-btn-outline, .system-btn-purple, .system-btn-red, .solo-cut, .solo-cut-sm, .solo-cut-lg, .system-panel):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset-inset);
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────
+   Infinite ambient animations are the vestibular hazard; entrance
+   animations collapse to a plain fade so content still announces itself. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-glow,
+  .animate-warn-flicker,
+  .animate-spin-slow,
+  .xp-bar-fill,
+  .animate-spin,
+  .animate-ping,
+  .animate-pulse,
+  .animate-bounce {
+    animation: none !important;
+  }
+
+  .animate-materialize,
+  .animate-levelup,
+  .animate-toast-in,
+  .animate-slideIn,
+  .animate-scale-up,
+  .animate-fadeIn,
+  .animate-fade {
+    animation: system-fade var(--duration-instant) linear both !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Thin System scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #070b18; }
+::-webkit-scrollbar-thumb { background: #1c2a52; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2c4180; }
+
+/* Recharts dark-theme tweaks */
+.recharts-cartesian-grid line { stroke: rgba(63, 216, 255, 0.08); }
+.recharts-text { fill: #8ea7d8; font-family: var(--font-rajdhani), sans-serif; font-size: 12px; }
+.recharts-default-tooltip {
+  background: #0a1024 !important;
+  border: 1px solid rgba(63, 216, 255, 0.35) !important;
+  font-family: var(--font-rajdhani), sans-serif;
+}
