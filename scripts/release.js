@@ -1,4 +1,4 @@
-﻿const { execSync } = require('child_process');
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -13,7 +13,7 @@ const packages = ['contracts', 'platform', 'ui'];
 
 for (const pkg of packages) {
   const pkgDir = path.join(rootDir, 'packages', pkg);
-  console.log(`Packaging @yansha/${pkg}...`);
+  console.log(`Packaging @yansha-os/${pkg}...`);
   execSync(`npm pack --pack-destination "${artifactsDir}"`, {
     cwd: pkgDir,
     stdio: 'inherit'
