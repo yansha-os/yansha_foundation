@@ -1,9 +1,16 @@
-{
+﻿{
   "name": "@yansha/platform",
   "version": "0.1.0",
-  "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yansha-os/yansha_foundation.git",
+    "directory": "packages/platform"
+  },
   "dependencies": {
     "date-fns": "^4.4.0",
     "react": "19.2.8"
