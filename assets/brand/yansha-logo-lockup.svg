@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 36" width="160" height="36" fill="none">
+  <g transform="translate(0, 2)">
+    <rect width="32" height="32" rx="6" fill="#04060E" stroke="#00D9FF" stroke-width="1.2"/>
+    <path d="M16 6L23 12V26H9V12L16 6Z" fill="#0A0F1E" stroke="#00D9FF" stroke-width="1"/>
+    <path d="M16 9V23" stroke="#00D9FF" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M13 15L16 12L19 15" stroke="#8B6BFF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="42" y="12" font-family="'JetBrains Mono', monospace" font-size="8" letter-spacing="2.5" fill="#5C6483">( SYSTEM )</text>
+  <text x="42" y="27" font-family="'Chakra Petch', sans-serif" font-size="14" font-weight="700" letter-spacing="1" fill="#00D9FF">YANSHA</text>
+  <text x="110" y="27" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600" fill="#F0B429">يَنشَا</text>
+</svg>

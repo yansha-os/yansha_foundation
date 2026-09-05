@@ -1,0 +1,385 @@
+// ARISE — multi-user schema (public)
+// Auth identity lives in neon_auth (managed by Neon Auth). App tables key off userId.
+// Prisma 7: connection URL is in prisma.config.ts + @prisma/adapter-neon — not here.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Core ────────────────────────────────────────────────────────────
+
+model Profile {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  hunterName            String    @default("Hunter")
+  calorieGoal           Int       @default(2200)
+  proteinGoal           Int       @default(140)
+  waterGoalMl           Int       @default(2500)
+  sleepGoalHours        Float     @default(8)
+  stepsGoal             Int       @default(8000)
+  restDays              Int[]     @default([5])
+  preferRun             Boolean   @default(true)
+  prayerEnabled         Boolean   @default(true)
+  city                  String    @default("Mecca")
+  country               String    @default("Saudi Arabia")
+  method                Int       @default(4)
+  school                Int       @default(0)
+  notificationsEnabled  Boolean   @default(false)
+  sex                   String?
+  age                   Int?
+  birthDate             String?
+  heightCm              Float?
+  weightKg              Float?
+  activityLevel         String    @default("sedentary")
+  goal                  String    @default("maintain")
+  onboardedAt           DateTime?
+  localMigratedAt       DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("profiles")
+}
+
+model Progress {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  hunterXp   Int      @default(0)
+  worshipXp  Int      @default(0)
+  strength   Int      @default(10)
+  vitality   Int      @default(10)
+  discipline Int      @default(10)
+  faith      Int      @default(10)
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@index([hunterXp])
+  @@map("progress")
+}
+
+model Workout {
+  id          String   @id @default(cuid())
+  userId      String
+  date        String
+  name        String
+  exerciseId  String?
+  type        String
+  sets        Int?
+  reps        Int?
+  weightKg    Float?
+  durationMin Int?
+  estKcal     Int?
+  xpAwarded   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, date])
+  @@map("workouts")
+}
+
+model Meal {
+  id         String   @id @default(cuid())
+  userId     String
+  date       String
+  name       String
+  foodId     String?
+  multiplier Float?
+  calories   Int
+  protein    Float
+  carbs      Float
+  fat        Float
+  createdAt  DateTime @default(now())
+
+  @@index([userId, date])
+  @@map("meals")
+}
+
+model HealthLog {
+  id         String   @id @default(cuid())
+  userId     String
+  date       String
+  weightKg   Float?
+  waterMl    Int      @default(0)
+  sleepHours Float?
+  steps      Int?
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@map("health_logs")
+}
+
+model QuestDay {
+  id           String   @id @default(cuid())
+  userId       String
+  date         String
+  rank         String
+  isRest       Boolean  @default(false)
+  quests       Json
+  bonusAwarded Boolean  @default(false)
+  rolled       Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@map("quest_days")
+}
+
+model DayTotals {
+  id      String @id @default(cuid())
+  userId  String
+  date    String
+  totals  Json
+
+  @@unique([userId, date])
+  @@map("day_totals")
+}
+
+model StreakState {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  current       Int      @default(0)
+  freezes       Int      @default(2)
+  lastRollover  String   @default("")
+  redemption    Json?
+  reducedBonus  Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+
+  @@map("streak_states")
+}
+
+model DifficultyState {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  modifiers    Json     @default("{}")
+  lastAdjusted Json     @default("{}")
+  updatedAt    DateTime @updatedAt
+
+  @@map("difficulty_states")
+}
+
+model AchievementState {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  earned        Json     @default("{}")
+  counters      Json     @default("{}")
+  equippedTitle String   @default("novice-hunter")
+  updatedAt     DateTime @updatedAt
+
+  @@map("achievement_states")
+}
+
+model DailyAwards {
+  id     String @id @default(cuid())
+  userId String
+  date   String
+  keys   String[]
+
+  @@unique([userId, date])
+  @@map("daily_awards")
+}
+
+model SystemNotice {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("system_notices")
+}
+
+// ── Worship (private — never exposed via social queries) ────────────
+
+model PrayerDay {
+  id        String   @id @default(cuid())
+  userId    String
+  date      String
+  fajr      String?
+  dhuhr     String?
+  asr       String?
+  maghrib   String?
+  isha      String?
+  awards    Json     @default("{}")
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@map("prayer_days")
+}
+
+model QadaItem {
+  id          String    @id @default(cuid())
+  userId      String
+  date        String
+  prayer      String
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, completedAt])
+  @@map("qada_items")
+}
+
+model WorshipEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String
+  amount    Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("worship_events")
+}
+
+// ── Shared (not tenant-scoped) ──────────────────────────────────────
+
+model PrayerTimeCache {
+  id        String   @id @default(cuid())
+  dateKey   String
+  city      String
+  country   String
+  method    Int
+  school    Int
+  timezone  String
+  timings   Json
+  fetchedAt DateTime @default(now())
+
+  @@unique([dateKey, city, country, method, school])
+  @@map("prayer_time_caches")
+}
+
+// ── Social (fitness only — no worship columns anywhere) ─────────────
+
+model Guild {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  inviteCode  String   @unique @default(cuid())
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members    GuildMember[]
+  challenges GuildChallenge[]
+
+  @@index([ownerId])
+  @@map("guilds")
+}
+
+model GuildMember {
+  id       String   @id @default(cuid())
+  guildId  String
+  userId   String
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+  @@index([userId])
+  @@map("guild_members")
+}
+
+model GuildChallenge {
+  id          String    @id @default(cuid())
+  guildId     String
+  title       String
+  metric      String
+  target      Float
+  startsAt    DateTime
+  endsAt      DateTime
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  guild   Guild                 @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  entries GuildChallengeEntry[]
+
+  @@index([guildId])
+  @@map("guild_challenges")
+}
+
+model GuildChallengeEntry {
+  id          String   @id @default(cuid())
+  challengeId String
+  userId      String
+  progress    Float    @default(0)
+  updatedAt   DateTime @updatedAt
+
+  challenge GuildChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+  @@index([userId])
+  @@map("guild_challenge_entries")
+}
+
+/// Offline action queue flushed on reconnect
+model SyncQueueItem {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  payload   Json
+  createdAt DateTime @default(now())
+  syncedAt  DateTime?
+
+  @@index([userId, syncedAt])
+  @@map("sync_queue_items")
+}
+
+// ── Collaborative Mentorship Circles & Classrooms ────────────────────
+
+model Circle {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  category    String   // "hifz" | "workout" | "study" | "general"
+  mentorId    String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     CircleMember[]
+  assignments CircleAssignment[]
+
+  @@index([code])
+  @@index([mentorId])
+  @@map("circles")
+}
+
+model CircleMember {
+  id              String   @id @default(cuid())
+  circleId        String
+  userId          String
+  role            String   @default("student") // "student" | "mentor"
+  /// Never include worship-adherence scopes (e.g. salah) — CONSTITUTION.md §12.
+  sharedTelemetry String[] @default(["hifz"])
+  joinedAt        DateTime @default(now())
+
+  circle          Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  @@unique([circleId, userId])
+  @@index([userId])
+  @@map("circle_members")
+}
+
+model CircleAssignment {
+  id          String    @id @default(cuid())
+  circleId    String
+  title       String
+  description String
+  moduleType  String    // "hifz" | "workout" | "study"
+  targetValue String
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+
+  circle      Circle    @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  @@index([circleId])
+  @@map("circle_assignments")
+}
